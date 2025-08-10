@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: canary-forge
+  data:
+    mongodb:
+      uri: ${MONGO_URI:mongodb://localhost:27017/canaryforge}
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+      probes:
+        enabled: true
