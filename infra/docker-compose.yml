@@ -1,0 +1,13 @@
+services:
+  mongo:
+    image: mongo
+    container_name: cf-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    # opcional: variables por defecto sensatas
+    environment:
+      - MONGO_INITDB_DATABASE=canaryforge
+volumes:
+  mongo_data:
