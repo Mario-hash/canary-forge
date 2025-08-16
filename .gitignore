@@ -22,3 +22,14 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
+backend/HELP.md
+backend/.vscode/NEWLY_CREATED_BY_SPRING_INITIALIZR
+backend/target/backend-0.0.1-SNAPSHOT.jar.original
+backend/target/maven-archiver/pom.properties
+backend/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst
+backend/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst
+backend/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/createdFiles.lst
+backend/target/maven-status/maven-compiler-plugin/testCompile/default-testCompile/inputFiles.lst
+.vscode/settings.json
+infra/.env
+.vscode/launch.json
