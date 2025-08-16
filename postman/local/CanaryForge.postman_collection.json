@@ -1,0 +1,129 @@
+{
+  "info": {
+    "name": "Canary Forge — Backend Smoke",
+    "_postman_id": "3e4c7e1b-7e0e-4f2b-9d7f-111111111111",
+    "description": "Pruebas básicas del backend: health, creación de token URL, click y pixel, y stream SSE.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "label", "value": "cv" },
+    { "key": "scenario", "value": "resume" },
+    { "key": "ttlSec", "value": "3600" },
+    { "key": "ceboUrl", "value": "" },
+    { "key": "sig", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/actuator/health"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('status 200', () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "pm.test('app UP', () => pm.expect(j.status).to.eql('UP'));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Create URL Token",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": "{{baseUrl}}/api/tokens",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"type\": \"URL\",\n  \"label\": \"{{label}}\",\n  \"scenario\": \"{{scenario}}\",\n  \"ttlSec\": {{ttlSec}}\n}"
+        },
+      "description": "Crea un token de tipo URL (I1). Devuelve { url: \"/c/<sig>\" }"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('2xx', () => pm.response.to.be.success);",
+              "const data = pm.response.json();",
+              "pm.test('tiene url', () => pm.expect(data.url).to.be.a('string'));",
+              "// Guarda variables para las siguientes requests",
+              "pm.collectionVariables.set('ceboUrl', data.url);",
+              "const sig = String(data.url).replace(/^\\/c\\//, '');",
+              "pm.collectionVariables.set('sig', sig);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Click URL Cebo (204)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "User-Agent", "value": "Mozilla/5.0" }
+        ],
+        "url": "{{baseUrl}}{{ceboUrl}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('204 No Content', () => pm.response.to.have.status(204));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "description": "Simula que un humano ha hecho click (UA de navegador). Debería registrar un evento de severidad MEDIUM."
+    },
+    {
+      "name": "Pixel (previewer) — 200 SVG",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "User-Agent", "value": "Slackbot 1.0" },
+          { "key": "Accept", "value": "image/svg+xml" }
+        ],
+        "url": "{{baseUrl}}/p/{{sig}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('200 OK', () => pm.response.to.have.status(200));",
+              "pm.test('Content-Type SVG', () => pm.expect(pm.response.headers.get('content-type')).to.include('image/svg'));",
+              "pm.test('Cache-Control no-store', () => pm.expect(pm.response.headers.get('cache-control')).to.include('no-store'));",
+              "pm.test('body no vacío', () => pm.expect(pm.response.text().length).to.be.above(0));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "description": "Simula un cargador de previsualización (Slack/Twitter/LinkedIn). El UA de 'bot' debería marcar LOW. Nota: /api/tokens por ahora emite tipo URL; sirve igual para probar /p/{sig}."
+    },
+    {
+      "name": "Events Stream (SSE)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "text/event-stream" }
+        ],
+        "url": "{{baseUrl}}/api/events/stream"
+      },
+      "description": "SSE en vivo. Postman no siempre mantiene la conexión indefinida. Si se corta, abre esta URL en el navegador o usa curl: `curl -N {{baseUrl}}/api/events/stream`."
+    }
+  ]
+}
