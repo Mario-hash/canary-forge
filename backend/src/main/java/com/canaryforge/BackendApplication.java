@@ -1,4 +1,4 @@
-package com.canaryforge.backend;
+package com.canaryforge;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
