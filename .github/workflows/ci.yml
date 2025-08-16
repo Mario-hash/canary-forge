@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"] # cualquier rama
+  pull_request:
+    branches: ["main"] # PRs hacia main
+
+jobs:
+  backend:
+    name: Backend (build + tests + coverage)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Temurin JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Maven verify (tests + coverage + threshold)
+        run: ./mvnw -B -ntp verify
+
+      - name: Upload JaCoCo HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: backend/target/site/jacoco/
