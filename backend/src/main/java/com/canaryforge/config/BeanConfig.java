@@ -6,9 +6,11 @@ import com.canaryforge.adapter.persistence.MongoEventStoreAdapter;
 import com.canaryforge.adapter.realtime.SseEventPublisherAdapter;
 import com.canaryforge.adapter.system.RandomUuidAdapter;
 import com.canaryforge.adapter.system.SystemClockAdapter;
+import com.canaryforge.application.port.in.CreatePixTokenUseCase;
 import com.canaryforge.application.port.in.CreateUrlTokenUseCase;
 import com.canaryforge.application.port.in.RegisterHitUseCase;
 import com.canaryforge.application.port.out.*;
+import com.canaryforge.application.service.CreatePixTokenService;
 import com.canaryforge.application.service.CreateUrlTokenService;
 import com.canaryforge.application.service.RegisterHitService;
 import com.canaryforge.infrastructure.secrets.SecretsConfig;
@@ -50,5 +52,10 @@ public class BeanConfig {
     @Bean
     RegisterHitUseCase registerHitUseCase(TokenSignerPort s, EventStorePort st, EventPublisherPort p, ClockPort c) {
         return new RegisterHitService(s, st, p, c);
+    }
+
+    @Bean
+    CreatePixTokenUseCase createPixTokenUseCase(TokenSignerPort s, ClockPort c, IdGeneratorPort ids) {
+        return new CreatePixTokenService(s, c, ids);
     }
 }
