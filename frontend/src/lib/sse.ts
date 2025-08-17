@@ -6,7 +6,7 @@ export type CfEvent = {
   scenario: string;
   source?: { ipTrunc?: string; ua?: string; referrer?: string };
   severity: "LOW" | "MEDIUM" | "HIGH";
-  createdAt: string; 
+  createdAt: string;
 };
 
 type Options = {
@@ -16,7 +16,7 @@ type Options = {
 };
 
 export function connectSSE({
-  url = "http://localhost:8080/api/events/stream",
+  url = "/api/events/stream",
   onEvent,
   onStatus,
 }: Options) {
@@ -26,35 +26,47 @@ export function connectSSE({
 
   const open = () => {
     onStatus?.("connecting");
+    console.log("[SSE] opening", url); 
     es = new EventSource(url, { withCredentials: false });
 
-    es.addEventListener("event", (msg) => {
-      try {
-        const data = JSON.parse((msg as MessageEvent).data) as CfEvent;
-        onEvent?.(data);
-      } catch {}
-    });
-
     es.onmessage = (msg) => {
+      console.log("[SSE:message]", msg.data);
       try {
         const data = JSON.parse(msg.data) as CfEvent;
         onEvent?.(data);
-      } catch {}
+      } catch (e) {
+        console.warn("[SSE] parse fail (message)", e);
+      }
     };
 
-    es.addEventListener("heartbeat", () => {});
+    es.addEventListener("event", (msg) => {
+      const dataStr = (msg as MessageEvent).data;
+      console.log("[SSE:event]", dataStr); 
+      try {
+        const data = JSON.parse(dataStr) as CfEvent;
+        onEvent?.(data);
+      } catch (e) {
+        console.warn("[SSE] parse fail (event)", e);
+      }
+    });
+
+    es.addEventListener("heartbeat", () => {
+    });
 
     es.onopen = () => {
       retry = 0;
+      console.log("[SSE] open"); // 🔎
       onStatus?.("open");
     };
 
-    es.onerror = () => {
+    es.onerror = (ev) => {
+      console.warn("[SSE] error", ev); // 🔎
       onStatus?.("error");
       es?.close();
       es = null;
       retry = Math.min(retry + 1, 6);
       const backoff = Math.min(500 * 2 ** retry, maxBackoff);
+      console.log("[SSE] retrying in", backoff, "ms"); // 🔎
       setTimeout(open, backoff);
     };
   };
@@ -62,6 +74,7 @@ export function connectSSE({
   open();
 
   return () => {
+    console.log("[SSE] closed by client"); // 🔎
     onStatus?.("closed");
     es?.close();
     es = null;
