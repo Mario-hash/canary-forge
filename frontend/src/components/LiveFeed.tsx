@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { connectSSE } from "../lib/sse"; 
-import type { CfEvent } from "../lib/sse"; 
+import { connectSSE, type CfEvent } from "../lib/sse";
 
 function badgeColor(sev: CfEvent["severity"]) {
   switch (sev) {
@@ -16,23 +15,22 @@ function fmtTime(iso: string) {
 
 export default function LiveFeed() {
   const [events, setEvents] = useState<CfEvent[]>([]);
-  const [status, setStatus] = useState<"connecting"|"open"|"closed"|"error">("connecting");
+  const [status, setStatus] = useState<"connecting" | "open" | "closed" | "error">("closed");
   const [q, setQ] = useState("");
-  const [sev, setSev] = useState<"ALL"|"LOW"|"MEDIUM"|"HIGH">("ALL");
-  const [type, setType] = useState<"ALL"|"URL"|"PIX"|"KEY">("ALL");
+  const [sev, setSev] = useState<"ALL" | "LOW" | "MEDIUM" | "HIGH">("ALL");
+  const [type, setType] = useState<"ALL" | "URL" | "PIX" | "KEY">("ALL");
 
   useEffect(() => {
     const dispose = connectSSE({
-      onEvent: (e) => {
-        setEvents(prev => [e, ...prev].slice(0, 200)); 
-      },
-      onStatus: setStatus
+      url: "/api/events/stream", // relativo → Vite proxy
+      onEvent: (e) => setEvents((prev) => [e, ...prev].slice(0, 200)),
+      onStatus: setStatus,
     });
-    return dispose;
+    return dispose; // 🔴 cerramos al desmontar (evita fugas/reintentos)
   }, []);
 
   const filtered = useMemo(() => {
-    return events.filter(e => {
+    return events.filter((e) => {
       const passSev = sev === "ALL" || e.severity === sev;
       const passType = type === "ALL" || e.tokenType === type;
       const text = `${e.label} ${e.scenario} ${e.source?.ua ?? ""} ${e.source?.referrer ?? ""} ${e.source?.ipTrunc ?? ""}`.toLowerCase();
@@ -46,27 +44,41 @@ export default function LiveFeed() {
       <div className="max-w-6xl mx-auto p-6 space-y-4">
         <header className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Canary Forge — Live Feed</h1>
-          <span className={`text-xs px-2 py-1 rounded ${
-              status === "open" ? "bg-emerald-200 text-emerald-900" :
-              status === "connecting" ? "bg-amber-200 text-amber-900" :
-              "bg-rose-200 text-rose-900"}`}>
+          <span
+            className={`text-xs px-2 py-1 rounded ${
+              status === "open"
+                ? "bg-emerald-200 text-emerald-900"
+                : status === "connecting"
+                ? "bg-amber-200 text-amber-900"
+                : "bg-rose-200 text-rose-900"
+            }`}
+          >
             {status}
           </span>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           <input
-            className="md:col-span-2 border rounded px-3 py-2"
+            className="md:col-span-2 border rounded px-3 py-2 bg-transparent"
             placeholder="Buscar (label, scenario, UA, referrer, IP…)"
-            value={q} onChange={(e)=>setQ(e.target.value)}
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
           />
-          <select className="border rounded px-3 py-2" value={sev} onChange={(e)=>setSev(e.target.value as any)}>
+          <select
+            className="border rounded px-3 py-2 bg-transparent"
+            value={sev}
+            onChange={(e) => setSev(e.target.value as any)}
+          >
             <option value="ALL">Severidad: todas</option>
             <option value="LOW">LOW</option>
             <option value="MEDIUM">MEDIUM</option>
             <option value="HIGH">HIGH</option>
           </select>
-          <select className="border rounded px-3 py-2" value={type} onChange={(e)=>setType(e.target.value as any)}>
+          <select
+            className="border rounded px-3 py-2 bg-transparent"
+            value={type}
+            onChange={(e) => setType(e.target.value as any)}
+          >
             <option value="ALL">Tipo: todos</option>
             <option value="URL">URL</option>
             <option value="PIX">PIX</option>
@@ -96,10 +108,16 @@ export default function LiveFeed() {
                   <td className="px-3 py-2">{e.label}</td>
                   <td className="px-3 py-2">{e.scenario}</td>
                   <td className="px-3 py-2">{e.source?.ipTrunc ?? "-"}</td>
-                  <td className="px-3 py-2 max-w-[280px] truncate" title={e.source?.ua}>{e.source?.ua ?? "-"}</td>
-                  <td className="px-3 py-2 max-w-[200px] truncate" title={e.source?.referrer}>{e.source?.referrer ?? "-"}</td>
+                  <td className="px-3 py-2 max-w-[280px] truncate" title={e.source?.ua}>
+                    {e.source?.ua ?? "-"}
+                  </td>
+                  <td className="px-3 py-2 max-w-[200px] truncate" title={e.source?.referrer}>
+                    {e.source?.referrer ?? "-"}
+                  </td>
                   <td className="px-3 py-2">
-                    <span className={`text-xs px-2 py-1 rounded ${badgeColor(e.severity)}`}>{e.severity}</span>
+                    <span className={`text-xs px-2 py-1 rounded ${badgeColor(e.severity)}`}>
+                      {e.severity}
+                    </span>
                   </td>
                 </tr>
               ))}
