@@ -116,3 +116,59 @@ GET http://localhost:8080/api/events/stream
 Ábrelo en navegador o Postman → **Server-Sent Events (SSE)**.
 
 👉 Cada clic/pixel aparece como un **nuevo evento en vivo**.
+
+com.canaryforge
+├─ application
+│ ├─ command
+│ │ └─ CreateTokenCommand.java
+│ │ └─ RegisterHitCommand.java
+│ ├─ port
+│ │ ├─ in
+│ │ │ └─ CreateTokenUseCase.java
+│ │ │ └─ RegisterHitUseCase.java
+│ │ └─ out
+│ │ └─ TokenSignerPort.java
+│ │ └─ EventStorePort.java
+│ │ └─ EventPublisherPort.java
+│ └─ service
+│ └─ CreateTokenService.java
+│ └─ RegisterHitService.java
+│
+├─ domain
+│ └─ entities
+│ ├─ event (aggregate + VOs + exceptions)
+│ └─ token (VOs + exceptions)
+│ └─ common (Version, DomainException, etc.)
+│
+├─ adapter
+│ ├─ web
+│ │ ├─ controller
+│ │ │ └─ TokenController.java
+│ │ │ └─ ClickController.java
+│ │ │ └─ PixelController.java
+│ │ │ └─ EventStreamController.java
+│ │ ├─ dto
+│ │ │ └─ CreateTokenRequest.java
+│ │ │ └─ TokenResponse.java
+│ │ │ └─ EventSseDto.java
+│ │ └─ mapper
+│ │ └─ TokenWebMapper.java
+│ │ └─ HitWebMapper.java
+│ │ └─ EventWebMapper.java
+│ │
+│ ├─ persistence
+│ │ └─ EventDoc.java
+│ │ └─ EventRepository.java
+│ │ └─ MongoEventStoreAdapter.java // implements application.port.out.EventStorePort
+│ │
+│ ├─ realtime
+│ │ └─ SseEventPublisherAdapter.java // implements application.port.out.EventPublisherPort
+│ │
+│ ├─ crypto
+│ │ └─ HmacTokenSignerAdapter.java // implements application.port.out.TokenSignerPort
+│ │
+│ └─ system
+│ └─ SystemClockAdapter.java // implements ClockPort si lo tienes
+│
+└─ config
+└─ BeanConfig.java

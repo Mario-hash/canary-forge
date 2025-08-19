@@ -4,13 +4,12 @@ import com.canaryforge.adapter.crypto.HmacTokenSignerAdapter;
 import com.canaryforge.adapter.persistence.EventRepository;
 import com.canaryforge.adapter.persistence.MongoEventStoreAdapter;
 import com.canaryforge.adapter.realtime.SseEventPublisherAdapter;
-import com.canaryforge.adapter.system.RandomUuidAdapter;
 import com.canaryforge.adapter.system.SystemClockAdapter;
 import com.canaryforge.application.port.in.CreateTokenUseCase;
 import com.canaryforge.application.port.in.RegisterHitUseCase;
 import com.canaryforge.application.port.out.*;
-import com.canaryforge.application.service.CreateTokenService;
-import com.canaryforge.application.service.RegisterHitService;
+import com.canaryforge.application.usecase.CreateTokenUseCaseImpl;
+import com.canaryforge.application.usecase.RegisterHitUseCaseImpl;
 import com.canaryforge.infrastructure.secrets.SecretsConfig;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,17 +37,15 @@ public class BeanConfig {
     }
 
     @Bean
-    IdGeneratorPort idGeneratorPort() {
-        return new RandomUuidAdapter();
-    }
-
-    @Bean
-    RegisterHitUseCase registerHitUseCase(TokenSignerPort s, EventStorePort st, EventPublisherPort p, ClockPort c) {
-        return new RegisterHitService(s, st, p, c);
+    public RegisterHitUseCase registerHitUseCase(TokenSignerPort signer,
+            EventStorePort store,
+            EventPublisherPort pub,
+            ClockPort clock) {
+        return new RegisterHitUseCaseImpl(signer, store, pub, clock);
     }
 
     @Bean
     CreateTokenUseCase createTokenUseCase(TokenSignerPort signer, ClockPort clock) {
-        return new CreateTokenService(signer, clock);
+        return new CreateTokenUseCaseImpl(signer, clock);
     }
 }
