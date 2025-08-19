@@ -4,7 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.canaryforge.application.port.out.EventPublisherPort;
-import com.canaryforge.domain.event.Event;
+import com.canaryforge.domain.entities.event.Event;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;

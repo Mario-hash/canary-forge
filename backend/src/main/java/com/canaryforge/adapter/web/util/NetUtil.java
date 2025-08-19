@@ -1,4 +1,4 @@
-package com.canaryforge.adapter.web;
+package com.canaryforge.adapter.web.util;
 
 import java.net.InetSocketAddress;
 
