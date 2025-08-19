@@ -1,7 +1,9 @@
 package com.canaryforge.adapter.persistence;
 
 import com.canaryforge.application.port.out.EventStorePort;
-import com.canaryforge.domain.event.Event;
+import com.canaryforge.domain.entities.common.Version;
+import com.canaryforge.domain.entities.event.Event;
+import com.canaryforge.domain.entities.event.vo.*;
 
 import reactor.core.publisher.Mono;
 
@@ -15,25 +17,30 @@ public class MongoEventStoreAdapter implements EventStorePort {
 
     @Override
     public Mono<Event> save(Event e) {
+        // dominio -> doc
         EventDoc d = new EventDoc();
-        d.type = e.type();
-        d.tokenType = e.tokenType();
-        d.label = e.label();
-        d.scenario = e.scenario();
-        d.ipTrunc = e.source() == null ? null : e.source().ipTrunc();
-        d.ua = e.source() == null ? null : e.source().ua();
-        d.referrer = e.source() == null ? null : e.source().referrer();
-        d.severity = e.severity() == null ? null : e.severity().name();
-        d.createdAt = e.createdAt();
-        return repo.save(d).map(saved -> new Event(
-                saved.id,
-                saved.type,
-                saved.tokenType,
-                saved.label,
-                saved.scenario,
-                new Event.Source(saved.ipTrunc, saved.ua, saved.referrer),
-                saved.severity == null ? null : com.canaryforge.domain.event.Severity.valueOf(saved.severity),
-                saved.createdAt));
-    }
+        d.id = e.id().toString(); // UUID string
+        d.type = e.type().name();
+        d.producer = e.producer().value();
+        d.version = e.version().value();
+        d.occurredAt = e.occurredAt().value();
+        d.correlationId = e.correlationId() == null ? null : e.correlationId().value().toString();
+        d.causationId = e.causationId() == null ? null : e.causationId().value().toString();
+        d.payloadJson = e.payload() == null ? null : e.payload().raw();
+        d.attributes = e.attributes() == null ? null : e.attributes().value();
 
+        return repo.save(d).map(saved -> {
+            // doc -> dominio (usa restore)
+            return Event.restore(
+                    EventId.fromString(saved.id),
+                    EventType.from(saved.type),
+                    new OccurredAt(saved.occurredAt),
+                    new Producer(saved.producer),
+                    Version.of(saved.version == null ? 1 : saved.version),
+                    saved.correlationId == null ? null : CorrelationId.fromString(saved.correlationId),
+                    saved.causationId == null ? null : CausationId.fromString(saved.causationId),
+                    JsonPayload.of(saved.payloadJson),
+                    Attributes.of(saved.attributes));
+        });
+    }
 }
