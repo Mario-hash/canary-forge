@@ -1,4 +1,4 @@
-package com.canaryforge.domain.entities.token.exceptions;
+package com.canaryforge.domain.entities.common;
 
 public abstract class DomainException extends RuntimeException {
     private final String code;

@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import com.canaryforge.domain.entities.common.Version;
 import com.canaryforge.domain.entities.token.exceptions.InvalidExpirationException;
 import com.canaryforge.domain.entities.token.exceptions.UnsupportedTokenTypeException;
 import com.canaryforge.domain.entities.token.vo.Label;
@@ -13,7 +14,6 @@ import com.canaryforge.domain.entities.token.vo.Nonce;
 import com.canaryforge.domain.entities.token.vo.Scenario;
 import com.canaryforge.domain.entities.token.vo.TokenType;
 import com.canaryforge.domain.entities.token.vo.TtlSeconds;
-import com.canaryforge.domain.entities.token.vo.Version;
 
 public final class Token {
     private final TokenType type;

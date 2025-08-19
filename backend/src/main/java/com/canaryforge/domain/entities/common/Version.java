@@ -1,4 +1,4 @@
-package com.canaryforge.domain.entities.token.vo;
+package com.canaryforge.domain.entities.common;
 
 import java.util.Objects;
 
