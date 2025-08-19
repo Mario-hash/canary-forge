@@ -1,6 +1,6 @@
 package com.canaryforge.application.port.out;
 
-import com.canaryforge.domain.event.Event;
+import com.canaryforge.domain.entities.event.Event;
 
 import reactor.core.publisher.Flux;
 

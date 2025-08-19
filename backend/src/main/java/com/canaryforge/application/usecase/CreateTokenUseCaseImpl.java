@@ -1,4 +1,4 @@
-package com.canaryforge.application.service;
+package com.canaryforge.application.usecase;
 
 import com.canaryforge.application.command.CreateTokenCommand;
 import com.canaryforge.application.port.in.CreateTokenUseCase;
@@ -10,11 +10,11 @@ import com.canaryforge.domain.entities.token.vo.*;
 import java.time.Clock;
 import java.time.ZoneOffset;
 
-public class CreateTokenService implements CreateTokenUseCase {
+public class CreateTokenUseCaseImpl implements CreateTokenUseCase {
     private final TokenSignerPort signer;
     private final ClockPort clock;
 
-    public CreateTokenService(TokenSignerPort signer, ClockPort clock) {
+    public CreateTokenUseCaseImpl(TokenSignerPort signer, ClockPort clock) {
         this.signer = signer;
         this.clock = clock;
     }

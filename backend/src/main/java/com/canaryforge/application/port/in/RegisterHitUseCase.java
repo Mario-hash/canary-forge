@@ -1,10 +1,11 @@
 package com.canaryforge.application.port.in;
 
-import com.canaryforge.domain.event.Event;
+import com.canaryforge.application.command.RegisterHitCommand;
+import com.canaryforge.domain.entities.event.Event;
 
 import reactor.core.publisher.Mono;
 
 public interface RegisterHitUseCase {
-    Mono<Event> register(String sig, String ua, String referrer, String ipTrunc);
+    Mono<Event> register(RegisterHitCommand cmd);
 
 }
