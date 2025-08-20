@@ -1,5 +1,6 @@
 package com.canaryforge.adapter.web;
 
+import com.canaryforge.adapter.web.controller.TokenController;
 import com.canaryforge.adapter.web.dto.TokenResponse;
 import com.canaryforge.application.command.CreateTokenCommand;
 import com.canaryforge.application.port.in.CreateTokenUseCase;

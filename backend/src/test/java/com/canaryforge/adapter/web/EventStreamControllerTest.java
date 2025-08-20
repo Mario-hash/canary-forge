@@ -1,8 +1,12 @@
 package com.canaryforge.adapter.web;
 
+import com.canaryforge.adapter.web.controller.EventStreamController;
+import com.canaryforge.adapter.web.dto.EventSseDto;
 import com.canaryforge.application.port.out.EventPublisherPort;
-import com.canaryforge.domain.event.Event;
-import com.canaryforge.domain.event.Severity;
+import com.canaryforge.domain.entities.common.Version;
+import com.canaryforge.domain.entities.event.Event;
+import com.canaryforge.domain.entities.event.vo.*;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
@@ -13,11 +17,13 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.test.web.reactive.server.WebTestClient;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 import reactor.test.StepVerifier;
 
 import java.time.Instant;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -29,7 +35,7 @@ class EventStreamControllerTest {
     static class Config {
         @Bean
         Sinks.Many<Event> eventSink() {
-            // 🔁 evita la carrera: reenvía el último a nuevos suscriptores
+            // Reemite el último para nuevos suscriptores y evita condiciones de carrera
             return Sinks.many().replay().limit(1);
         }
 
@@ -55,10 +61,24 @@ class EventStreamControllerTest {
     Sinks.Many<Event> sink;
 
     private static Event sample() {
-        return new Event(
-                "e1", "HIT", "URL", "cv", "resume",
-                new Event.Source("0.0.0.0/24", "JUnit", null),
-                Severity.MEDIUM, Instant.now());
+        Attributes attrs = Attributes.of(Map.of(
+                "label", "cv",
+                "tokenType", "URL",
+                "scenario", "resume",
+                "ipTrunc", "0.0.0.0/24",
+                "ua", "JUnit"
+        // si quieres severity: "severity","MEDIUM"
+        ));
+
+        return Event.create(
+                EventType.from("CLICK"),
+                new OccurredAt(Instant.now()),
+                new Producer("test"),
+                Version.of(1),
+                null, // CorrelationId
+                null, // CausationId
+                JsonPayload.of(null),
+                attrs);
     }
 
     @Test
@@ -91,16 +111,16 @@ class EventStreamControllerTest {
         var result = client.get().uri("/api/events/stream")
                 .exchange()
                 .expectStatus().isOk()
-                .returnResult(new ParameterizedTypeReference<ServerSentEvent<Event>>() {
+                .returnResult(new ParameterizedTypeReference<ServerSentEvent<EventSseDto>>() {
                 });
 
         StepVerifier.create(result.getResponseBody().map(ServerSentEvent::data))
-                .assertNext(e -> {
-                    assertThat(e).isNotNull();
-                    assertThat(e.label()).isEqualTo("cv");
-                    assertThat(e.type()).isEqualTo("HIT");
-                    assertThat(e.tokenType()).isEqualTo("URL");
-                    assertThat(e.severity()).isEqualTo(Severity.MEDIUM);
+                .assertNext(dto -> {
+                    assertThat(dto).isNotNull();
+                    assertThat(dto.type()).isEqualTo("CLICK");
+                    assertThat(dto.attributes().get("label")).isEqualTo("cv");
+                    assertThat(dto.attributes().get("tokenType")).isEqualTo("URL");
+                    assertThat(dto.attributes().get("scenario")).isEqualTo("resume");
                 })
                 .thenCancel()
                 .verify();

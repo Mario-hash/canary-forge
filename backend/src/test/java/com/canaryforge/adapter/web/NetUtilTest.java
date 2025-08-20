@@ -8,6 +8,8 @@ import java.net.InetSocketAddress;
 
 import org.junit.jupiter.api.Test;
 
+import com.canaryforge.adapter.web.util.NetUtil;
+
 class NetUtilTest {
 
     @Test
